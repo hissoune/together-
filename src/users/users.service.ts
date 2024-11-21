@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -6,12 +6,18 @@ import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
 import { UserDocument } from './schemas/user.schema';
 import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
- async register(createUserDto: CreateUserDto) {
+  private readonly authUrl: string;
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>,
+  private configService: ConfigService,
+) {
+  this.authUrl = this.configService.get<string>('EXTERNAL_AUTH_URL');
 
+}
+ async register(createUserDto: CreateUserDto) {
     const { name, email, password } = createUserDto;
 
     const existingUser = await this.userModel.findOne({ email }).exec();
@@ -30,18 +36,15 @@ export class UsersService {
       throw new ConflictException("user couldnt register try again ");
     }
     try {
-      const response = await axios.post('http://localhost:3002/auth/register',createUserDto );
+      const response = await axios.post(`${this.authUrl}/register`,createUserDto );
 
       const createdUser = response.data;
       return createdUser;
   } catch (error) {
       await this.userModel.findByIdAndDelete(rgistredUser._id); 
-      throw new Error('Registration failed');
+      throw new UnauthorizedException('Registration failed');
   }
 
-
-
-    return 'This action adds a new user';
   }
 
   findAll() {
@@ -60,7 +63,16 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 
-  login(createUserDto: CreateUserDto){
+  async login(createUserDto: CreateUserDto){
+    try {
+      const response = await axios.post(`${this.authUrl}/login`,createUserDto );
+
+      return { token: response.data.token };
+  } catch (error) {
+      throw new UnauthorizedException('Invalid credentials or authentication failed');
+  }
+
+
 
   }
 }
