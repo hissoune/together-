@@ -11,7 +11,9 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
   private readonly authUrl: string;
+
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>,
+
   private configService: ConfigService,
 ) {
   this.authUrl = this.configService.get<string>('EXTERNAL_AUTH_URL');
@@ -39,28 +41,31 @@ export class UsersService {
       const response = await axios.post(`${this.authUrl}/register`,createUserDto );
 
       const createdUser = response.data;
+
       return createdUser;
+
   } catch (error) {
       await this.userModel.findByIdAndDelete(rgistredUser._id); 
+
       throw new UnauthorizedException('Registration failed');
   }
 
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.userModel.find();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} user`;
+    return this.userModel.findById(id);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    return this.userModel.findByIdAndUpdate(id, updateUserDto);
   }
 
   remove(id: number) {
-    return `This action removes a #${id} user`;
+    return this.userModel.findByIdAndDelete(id);
   }
 
   async login(createUserDto: CreateUserDto){
