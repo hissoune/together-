@@ -22,7 +22,7 @@ export class PlaylistService {
   }
 
   findOne(id: string,ownerId:string) {
-    return `This action returns a #${id} playlist`;
+    return this.playlistmodel.findOne({_id:id,owner:ownerId});
   }
 
   update(id: number, updatePlaylistDto: UpdatePlaylistDto) {
