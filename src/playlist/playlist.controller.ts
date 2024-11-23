@@ -11,18 +11,24 @@ export class PlaylistController {
 
   @Post()
   create( @Request() req, @Body() createPlaylistDto: CreatePlaylistDto) {
+    const ownerId = req.user?.id;
+    createPlaylistDto.owner = ownerId;
     
     return this.playlistService.create(createPlaylistDto);
   }
 
   @Get()
-  findAll() {
-    return this.playlistService.findAll();
+  findAll( @Request() req) {
+    const ownerId = req.user?.id;
+
+    return this.playlistService.findAll(ownerId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.playlistService.findOne(+id);
+  findOne(@Param('id') id: string, @Request() req) {
+    const ownerId = req.user?.id;
+
+    return this.playlistService.findOne(id,ownerId);
   }
 
   @Patch(':id')
