@@ -25,9 +25,30 @@ export class PlaylistService {
     return this.playlistmodel.findOne({_id:id,owner:ownerId});
   }
 
-  update(id: number, updatePlaylistDto: UpdatePlaylistDto) {
-    return `This action updates a #${id} playlist`;
+  async update(id: string,ownerId:string, updatePlaylistDto: UpdatePlaylistDto) {
+    
+    const { videos, name } = updatePlaylistDto;
+  
+    const playlist = await this.playlistmodel.findOne({_id:id,owner:ownerId});
+    if (!playlist) {
+      throw new Error('Playlist not found');
+    }
+  
+    const updatedVideos = [...new Set([...playlist.videos, ...videos])]; 
+  
+    const updateData: any = {};
+  
+    if (name) {
+      updateData.name = name;
+    }
+  
+    if (videos && videos.length > 0) {
+      updateData.videos = updatedVideos;
+    }
+  
+    return await this.playlistmodel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
+  
 
   remove(id: number) {
     return `This action removes a #${id} playlist`;
