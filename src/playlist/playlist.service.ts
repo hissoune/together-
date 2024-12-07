@@ -8,17 +8,22 @@ import { Model } from 'mongoose';
 @Injectable()
 export class PlaylistService {
   constructor(@InjectModel(Playlist.name) private readonly playlistmodel:Model<PlaylistDocument>){}
+  
   create(createPlaylistDto: CreatePlaylistDto) {
 
+    console.log(createPlaylistDto);
     
     const newplaylist = new  this.playlistmodel(createPlaylistDto)
+    console.log(newplaylist);
     
     
     return newplaylist.save();
   }
 
   findAll(ownerId:string) {
-    return this.playlistmodel.find({owner:ownerId});
+
+    
+    return this.playlistmodel.find();
   }
 
   findOne(id: string,ownerId:string) {
@@ -26,7 +31,7 @@ export class PlaylistService {
   }
 
   async update(id: string,ownerId:string, updatePlaylistDto: UpdatePlaylistDto) {
-    
+
     const { videos, name } = updatePlaylistDto;
   
     const playlist = await this.playlistmodel.findOne({_id:id,owner:ownerId});
