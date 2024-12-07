@@ -6,7 +6,11 @@ import { User, UserSchema } from 'src/users/schemas/user.schema';
 import { Playlist, playlistSchema } from './schemas/playlist.schema';
 
 @Module({
-  imports:[ MongooseModule.forFeature([{ name: User.name, schema: UserSchema },{ name: Playlist.name, schema: playlistSchema }])],
+  imports:[ 
+    MongooseModule.forFeature([{ name: Playlist.name, schema: playlistSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
+
+],
 
   controllers: [PlaylistController],
   providers: [PlaylistService],
