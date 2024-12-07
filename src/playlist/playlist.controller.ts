@@ -11,16 +11,18 @@ export class PlaylistController {
 
   @Post()
   create( @Request() req, @Body() createPlaylistDto: CreatePlaylistDto) {
+    
     const ownerId = req.user?.id;
     createPlaylistDto.owner = ownerId;
+    
     
     return this.playlistService.create(createPlaylistDto);
   }
 
   @Get()
   findAll( @Request() req) {
-    const ownerId = req.user?.id;
-
+    const ownerId = req.user?.id; 
+   
     return this.playlistService.findAll(ownerId);
   }
 
