@@ -7,6 +7,7 @@ import { Model } from 'mongoose';
 import { UserDocument } from './schemas/user.schema';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
+import { log } from 'console';
 
 @Injectable()
 export class UsersService {
@@ -39,7 +40,8 @@ export class UsersService {
     }
     try {
       const response = await axios.post(`${this.authUrl}/register`,createUserDto );
-
+ 
+   
       const createdUser = response.data;
 
       return createdUser;
@@ -69,9 +71,12 @@ export class UsersService {
   }
 
   async login(createUserDto: CreateUserDto){
+    console.log('fuck');
+    
     try {
       const response = await axios.post(`${this.authUrl}/login`,createUserDto );
-
+          console.log(response);
+          
       return { token: response.data.token };
   } catch (error) {
       throw new UnauthorizedException('Invalid credentials or authentication failed');

@@ -14,12 +14,13 @@ export class UsersController {
 
   @Post('login')
   login (@Body() createUserDto: CreateUserDto){
-
+     console.log("fuc");
+     
     return this.usersService.login(createUserDto)
   }
 
   @Get()
-  findAll() {
+  findAll() { 
     return this.usersService.findAll();
   }
 
