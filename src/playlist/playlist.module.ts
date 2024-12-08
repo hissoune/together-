@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { PlaylistService } from './playlist.service';
 import { PlaylistController } from './playlist.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/users/schemas/user.schema';
+import { User, userSchema } from '../users/entities/user.entity';
 import { Playlist, playlistSchema } from './schemas/playlist.schema';
 
 @Module({
   imports:[ 
     MongooseModule.forFeature([{ name: Playlist.name, schema: playlistSchema }]),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
+    MongooseModule.forFeature([{ name: User.name, schema: userSchema }])
 
 ],
 

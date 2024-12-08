@@ -1,88 +1,50 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import {  hashPassword } from '../utils/password.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
-import { UserDocument } from './schemas/user.schema';
-import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
-import { log } from 'console';
 
 @Injectable()
 export class UsersService {
-  private readonly authUrl: string;
+ constructor(@InjectModel(User.name) private userModel: Model<User>,
+          
+){}
 
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>,
+ async createUser(createUserDto: CreateUserDto) {
 
-  private configService: ConfigService,
-) {
-  this.authUrl = this.configService.get<string>('EXTERNAL_AUTH_URL');
 
-}
- async register(createUserDto: CreateUserDto) {
-    const { name, email, password } = createUserDto;
+  const existUser = await this.userModel.findOne({email:createUserDto.email});
 
-    const existingUser = await this.userModel.findOne({ email }).exec();
+  if (existUser) {
 
-    if (existingUser) {
-
-      throw new ConflictException('Email is already in use');
-    }
-
-    const rgistredUser = new  this.userModel({name:name,email:email});
-
-    rgistredUser.save();
-
-    if (!rgistredUser) {
-
-      throw new ConflictException("user couldnt register try again ");
-    }
-    try {
-      const response = await axios.post(`${this.authUrl}/register`,createUserDto );
+    throw new UnauthorizedException('this email allredy exist ');
+  }
+    const hashedPassword = await hashPassword(createUserDto.password);
+    createUserDto.password = hashedPassword;
+  
+    const newUser =this.userModel.create(createUserDto);
+  
+    
+    return newUser;
+  }
  
-   
-      const createdUser = response.data;
 
-      return createdUser;
-
-  } catch (error) {
-      await this.userModel.findByIdAndDelete(rgistredUser._id); 
-
-      throw new UnauthorizedException('Registration failed');
-  }
-
-  }
-
-  findAll() {
+  getUsers() {
     return this.userModel.find();
   }
 
-  findOne(id: number) {
+  getUserById(id: string) {
     return this.userModel.findById(id);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.userModel.findByIdAndUpdate(id, updateUserDto);
-  }
-
-  remove(id: number) {
-    return this.userModel.findByIdAndDelete(id);
-  }
-
-  async login(createUserDto: CreateUserDto){
-    console.log('fuck');
+  updateUser(id: string, updateUserDto: UpdateUserDto) {
+    console.log(updateUserDto);
     
-    try {
-      const response = await axios.post(`${this.authUrl}/login`,createUserDto );
-          console.log(response);
-          
-      return { token: response.data.token };
-  } catch (error) {
-      throw new UnauthorizedException('Invalid credentials or authentication failed');
+    return this.userModel.findByIdAndUpdate(id, updateUserDto, {new:true})
   }
-
-
-
+  removeUser(id: string) {
+    return this.userModel.findByIdAndDelete(id);
   }
 }

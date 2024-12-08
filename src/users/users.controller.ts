@@ -1,41 +1,73 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, UnauthorizedException, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
+import { AuthGuard } from 'src/guards/auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 @Controller('users')
+@UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.register(createUserDto);
-  }
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = `${uuidv4()}${path.extname(file.originalname)}`;
+          callback(null, uniqueSuffix);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.'), false);
+        }
+      },
+    }),
+  )
+  createUser(
+    
+    @Body() createUserDto: CreateUserDto,
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+  
+  ) {
+    if (!file) {
+      throw new UnauthorizedException('Image is required');
+    }
+    
+    const serverUrl = `${req.protocol}://${req.get('host')}`; 
+    createUserDto.imagePath = `${serverUrl}/uploads/${file.filename}`;
 
-  @Post('login')
-  login (@Body() createUserDto: CreateUserDto){
-     console.log("fuc");
-     
-    return this.usersService.login(createUserDto)
+      return this.usersService.createUser(createUserDto);
   }
+ 
 
   @Get()
-  findAll() { 
-    return this.usersService.findAll();
+  getUsers() {
+    return this.usersService.getUsers();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  getUserById(@Param('id') id: string) {
+    return this.usersService.getUserById(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    
+    return this.usersService.updateUser(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  removeUser(@Param('id') id: string) {
+    return this.usersService.removeUser(id);
   }
 }
