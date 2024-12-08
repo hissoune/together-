@@ -2,10 +2,10 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { PlaylistService } from './playlist.service';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
-import { AuthMidllware } from 'src/guard/auth.gard';
+import { AuthGuard } from '../guards/auth.guard';
 
 @Controller('playlist')
-@UseGuards(AuthMidllware)
+@UseGuards(AuthGuard)
 export class PlaylistController {
   constructor(private readonly playlistService: PlaylistService) {}
 
